@@ -1,0 +1,7 @@
+id=riru_ibr
+name=Riru - Internal Browser Redirect
+version=v1
+versionCode=1
+author=Kr328
+description=Internal Browser Redirect [( Riru - Core && API 26/27/28 ) Required]
+minMagisk=1500
