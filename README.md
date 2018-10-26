@@ -1,6 +1,6 @@
-# Riru - VPN Hide 
+# Riru - InternalBrowserRedirect
 
-A module of [Riru](https://github.com/RikkaApps/Riru). Hide VPN from ConnectivityManager. 
+A module of [Riru](https://github.com/RikkaApps/Riru). Redirect internal browser activity to ACTION_VIEW.
 
 ## Requirements
 
