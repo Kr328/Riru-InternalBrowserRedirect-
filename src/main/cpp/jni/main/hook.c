@@ -76,7 +76,12 @@ static int hookedAndroidRuntime$startReg(JNIEnv *env) {
 
 		(*env)->RegisterNatives(env,javaHookedInjectClass,gInjectorMethod,2);
 
-		gIsDexLoaded = 1;
+		if ( (*env)->ExceptionCheck(env) ) {
+        	(*env)->ExceptionDescribe(env);
+        	(*env)->ExceptionClear(env);
+        	LOGE("Load class failure");
+        } else
+        	gIsDexLoaded = 1;
 	}
 
 	return result;
