@@ -5,7 +5,7 @@ A module of [Riru](https://github.com/RikkaApps/Riru). Redirect internal browser
 ## Requirements
 
 * [Riru](https://github.com/RikkaApps/Riru) installed.
-* Android 8.0/8.1
+* Android 9.0 (8.0/8.1 not test)
 
 ## Build
 
