@@ -53,11 +53,11 @@ public class Injector {
 
         if (url.isEmpty())
             return intent;
-        else if (!URLUtil.isValidUrl(url))
+        else if (!(URLUtil.isHttpUrl(url)||URLUtil.isHttpsUrl(url)))
             return intent;
         else if (GlobalConfig.get().getHostWhitePattern().matcher((uri = Uri.parse(url)).getHost()).matches())
             return intent;
-        else if ( lastStartUri.equals(uri) && System.currentTimeMillis() - lastStartTime < 10 * 1000 )
+        else if (lastStartUri.equals(uri) && System.currentTimeMillis() - lastStartTime < 5 * 1000)
             return intent;
 
         lastStartUri  = uri;
