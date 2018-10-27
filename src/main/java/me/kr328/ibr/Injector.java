@@ -18,6 +18,7 @@ public class Injector {
         Log.i(Global.TAG ,"Java getContextObject called");
 
         GlobalConfig.load(getCurrentConfigPath());
+        GlobalConfig.get().dump();
 
         return LocalInterfaceProxy.createInterfaceProxyBinder(ServiceManagerNative.asInterface(getContextObjectOriginal()) ,IServiceManager.class.getName() ,(original , replaced , method , args) -> {
             if ( "getService".equals(method.getName()) ) {
@@ -34,7 +35,7 @@ public class Injector {
         switch ( method.getName() ) {
             case "startActivity" :
                 Intent intent = (Intent) args[2];
-                Log.i(Global.TAG ,"TIM starting " + intent + " extra " + intent.getExtras());
+                Log.i(Global.TAG ,"Starting " + intent + " extra " + intent.getExtras());
                 args[2] = onStartActivity(intent);
                 break;
         }

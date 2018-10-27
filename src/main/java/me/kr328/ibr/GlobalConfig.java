@@ -44,6 +44,11 @@ public class GlobalConfig {
         return new String(buffer);
     }
 
+    public void dump() {
+        Log.i(Global.TAG ,"urlKey = " + getUrlKey());
+        Log.i(Global.TAG ,"hostWhitePattern = " + getHostWhitePattern().pattern());
+    }
+
     private String urlKey = "";
     private Pattern hostWhitePattern = Pattern.compile("");
 
