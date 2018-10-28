@@ -15,9 +15,11 @@ import java.lang.reflect.Method;
 @SuppressWarnings("unused")
 public class Injector {
     public static IBinder getContextObjectHooked() {
-        Log.i(Global.TAG ,"Java getContextObject called");
+        String currentConfig = getCurrentConfigPath();
 
-        GlobalConfig.load(getCurrentConfigPath());
+        Log.i(Global.TAG ,"Apply " + currentConfig);
+
+        GlobalConfig.load(currentConfig);
         GlobalConfig.get().dump();
 
         return LocalInterfaceProxy.createInterfaceProxyBinder(ServiceManagerNative.asInterface(getContextObjectOriginal()) ,IServiceManager.class.getName() ,(original , replaced , method , args) -> {
