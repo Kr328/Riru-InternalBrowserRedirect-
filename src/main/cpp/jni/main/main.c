@@ -54,11 +54,6 @@ __attribute__((visibility("default"))) void nativeForkAndSpecializePre(JNIEnv *e
             current_package = package_name;
             return;
         }
-        else if ( _uid == 10026 ) {
-            current_package = package_name;
-            return;
-        }
-
     }
 
     LOGI("Skip %s" ,package_name);

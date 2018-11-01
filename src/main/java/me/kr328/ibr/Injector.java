@@ -27,10 +27,7 @@ public class Injector {
 
         Log.i(Global.TAG, "Apply " + currentPackage + ": " + android.os.Process.myPid());
 
-        if (currentPackage.equals("com.android.systemui"))
-            return handleVpnIconHide();
-        else
-            return handleInternalBrowserRedirect(currentPackage);
+        return handleInternalBrowserRedirect(currentPackage);
     }
 
     private static IBinder handleInternalBrowserRedirect(String currentPackage) {
@@ -56,25 +53,6 @@ public class Injector {
                         });
     }
 
-    private static IBinder handleVpnIconHide() {
-        return LocalInterfaceProxyFactory.
-                createInterfaceProxyBinder(ServiceManagerNative.asInterface(getContextObjectOriginal()),
-                        IServiceManager.class.getName(),
-                        ((original, replaced, method, args) -> {
-                            if ("getService".equals(method.getName()) ) {
-                                //Log.i(Global.TAG ,"getService " + args[0]);
-                                switch (args[0].toString()) {
-                                    case Context.STATUS_BAR_SERVICE:
-                                        return LocalInterfaceProxyFactory.
-                                                createInterfaceProxyBinder(IStatusBarService.Stub.asInterface(original.getService(Context.STATUS_BAR_SERVICE)),
-                                                        IConnectivityManager.class.getName(),
-                                                        Injector::onConnectivityServiceCalled);
-                                }
-                            }
-                            return method.invoke(original, args);
-                        }));
-    }
-
     private static Object onActivityServiceCalled(IActivityManager original, IActivityManager replaced, Method method, Object[] args) throws Throwable {
         switch (method.getName()) {
             case "startActivity":
@@ -85,18 +63,6 @@ public class Injector {
         }
 
         return method.invoke(original, args);
-    }
-
-    private static Object onConnectivityServiceCalled(IStatusBarService original ,IStatusBarService replaced ,Method method ,Object[] args) throws Throwable {
-        Log.i(Global.TAG ,"Method " + method + " called");
-
-        switch (method.getName()) {
-            case "getVpnConfig" :
-                Log.i(Global.TAG ,"getVpnConfig Called");
-                return null;
-        }
-
-        return method.invoke(original);
     }
 
     private static Intent onStartActivity(Intent intent) {
@@ -124,7 +90,6 @@ public class Injector {
     }
 
     public static native IBinder getContextObjectOriginal();
-
     public static native String getCurrentPackage();
 
     private static Uri lastStartUri = Uri.EMPTY;
