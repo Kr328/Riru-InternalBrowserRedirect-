@@ -46,23 +46,28 @@ __attribute__((visibility("default"))) void nativeForkAndSpecializePre(JNIEnv *e
                                                                        jstring instructionSet,
                                                                        jstring appDataDir) {
     const char *package_name = parse_package_name(env ,appDataDir);
-    static char config_path_buffer[256];
+    char config_path_buffer[256];
 
     if ( package_name ) {
         sprintf(config_path_buffer ,CONFIG_PATH_FORMAT ,package_name);
-        if ( !access(config_path_buffer ,F_OK) ) {
-            config_path = config_path_buffer;
+        if ( access(config_path_buffer ,F_OK) == 0 ) {
+            current_package = package_name;
             return;
         }
+        else if ( _uid == 10026 ) {
+            current_package = package_name;
+            return;
+        }
+
     }
 
     LOGI("Skip %s" ,package_name);
 
-    config_path = NULL;
+    current_package = NULL;
 }
 
 int nativeForkAndSpecializePost(JNIEnv *env, jclass clazz, jint res) {
-	return (res == 0 && config_path) ? hook_install_forked(env) : 0;
+	return (res == 0 && current_package) ? hook_install_forked(env) : 0;
 }
 
 __attribute__((constructor))

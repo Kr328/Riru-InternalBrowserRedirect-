@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
-const char *config_path = NULL;
+const char *current_package = NULL;
 
 static int       gIsDexLoaded = 0;
 static jmethodID javaHookedGetContextObjectId = NULL;
@@ -23,7 +23,7 @@ static jobject jniGetContextObjectOriginal(JNIEnv* env, jobject clazz) {
 }
 
 static jstring jniGetCurrentConfigPath(JNIEnv *env ,jobject clazz) {
-    return (*env)->NewStringUTF(env ,config_path);
+    return (*env)->NewStringUTF(env ,current_package);
 }
 
 int hook_install_forked(JNIEnv *env) {
@@ -64,7 +64,7 @@ static const JNINativeMethod gBinderInternalMethod = {
 static const JNINativeMethod gInjectorMethod[] = {
 	/* name, signature, funcPtr */
 	{"getContextObjectOriginal","()Landroid/os/IBinder;", (void*)&jniGetContextObjectOriginal} ,
-	{"getCurrentConfigPath","()Ljava/lang/String;" ,(void*)&jniGetCurrentConfigPath}
+	{"getCurrentPackage","()Ljava/lang/String;" ,(void*)&jniGetCurrentConfigPath}
 };
 
 static int hookedAndroidRuntime$startReg(JNIEnv *env) {

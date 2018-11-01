@@ -17,4 +17,4 @@
 int hook_install_forked(JNIEnv *env);
 int hook_install_global(void);
 
-extern const char *config_path;
+extern const char *current_package;
