@@ -20,8 +20,6 @@ import java.util.Map;
 
 @SuppressWarnings("unused")
 public class Injector {
-    private static boolean isInitial = false;
-
     public static IBinder getContextObjectHooked() {
         String currentPackage = getCurrentPackage();
 
