@@ -1,0 +1,20 @@
+import com.github.kr328.plugin.riru.utils.AndroidUtils
+import com.github.kr328.plugin.riru.utils.PathUtils
+
+apply plugin: 'java'
+
+repositories {
+    mavenCentral()
+    jcenter()
+}
+
+sourceSets {
+    main.compileClasspath += files(AndroidUtils.androidJarPath("android-28")) //android.jar
+}
+
+compileJava {
+    destinationDir file(PathUtils.toLocalSeparator("$buildDir/intermediate/classes"))
+}
+
+assemble.dependsOn.clear()
+build.dependsOn.clear()

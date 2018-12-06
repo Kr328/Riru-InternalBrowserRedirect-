@@ -1,15 +1,17 @@
+import com.github.kr328.plugin.riru.CMakePlugin
+import com.github.kr328.plugin.riru.MagiskPlugin
+import com.github.kr328.plugin.riru.TransformDexPlugin
+import com.github.kr328.plugin.riru.utils.AndroidUtils
+import com.github.kr328.plugin.riru.utils.PathUtils
+
 apply plugin: 'java'
 apply plugin: 'idea'
-apply plugin: 'signing'
-
-group 'me.kr328'
-version '1.0-SNAPSHOT'
+apply plugin: CMakePlugin
+apply plugin: TransformDexPlugin
+apply plugin: MagiskPlugin
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
-
-def localProperties = new Properties();
-localProperties.load(new FileReader("local.properties"))
 
 repositories {
     mavenCentral()
@@ -17,102 +19,43 @@ repositories {
 }
 
 sourceSets {
-    main.compileClasspath += files("android-sdk/android.jar");
-    test.compileClasspath += files("android-sdk/android.jar");
+    main.compileClasspath += project(":classpath").files("src/main/java") // for hidden api
+    main.compileClasspath += files(AndroidUtils.androidJarPath("android-28")) //android.jar
+}
+
+compileJava {
+    destinationDir file(PathUtils.toLocalSeparator("$buildDir/intermediate/classes"))
+}
+
+cmake {
+    source 'src/main/cpp'
+    abiFilter "armeabi-v7a" ,"arm64-v8a"
+    platform "android-21"
+}
+
+dex {
+    buildToolsVersion "28.0.3"
+    compilePlatform "android-28"
+    output "boot-template.jar"
+}
+
+magisk {
+    map file("$buildDir/output/dex/") ,"system/framework/"
+    map file("$buildDir/output/cmake/armeabi-v7a/shared") ,"system/lib"
+    map file("$buildDir/output/cmake/arm64-v8a/shared")   ,"system/lib64"
+    map file("src/main/raw/magisk") ,""
+}
+
+task cleanAll(type: Delete) {
+    delete "build" ,"out"
+    delete PathUtils.toLocalSeparator("buildSrc/build") ,PathUtils.toLocalSeparator("buildSrc/out")
 }
 
 dependencies {
-    compile 'org.codehaus.groovy:groovy-all:2.3.11'
 }
 
-task transformClassesWithDex(type: Exec) {
-    executable localProperties.get("android.sdk") + "/build-tools/" + localProperties.get("android.buildtools") + "/d8"
-    args += ["--output", "$buildDir/intermediate/dex/ibr_injector.jar", "--lib", "$projectDir/android-sdk/android.jar"]
-
-    setStandardOutput  System.out
-    setErrorOutput     System.err
-
-    doFirst {
-        file("$buildDir/intermediate/dex").mkdirs();
-
-        args += fileTree("$buildDir/classes/")
-    }
-
-    onlyIf {
-        return !classes.state.upToDate;
-    }
-
-    dependsOn(classes)
-}
-
-task buildNative(type: Exec) {
-    executable localProperties.get("android.ndk") + "/ndk-build"
-    args += ["NDK_LIBS_OUT=$buildDir/intermediate/native-libs", "NDK_OUT=$buildDir/intermediate/native-objs", "NDK_PROJECT_PATH=$projectDir/src/main/cpp"]
-
-    doLast {
-        file("$buildDir/intermediate/magisk-module/system").mkdirs()
-    }
-}
-
-task prepareMagiskModule {
-    doLast {
-        copy {
-            from file("$projectDir/src/main/raw/magisk-module-config/")
-            into file("$buildDir/intermediate/magisk-module/")
-        }
-        copy {
-            from file("$buildDir/intermediate/native-libs/")
-            into file("$buildDir/intermediate/magisk-module/loader/")
-        }
-        copy {
-            from file("$buildDir/intermediate/dex/")
-            into file("$buildDir/intermediate/magisk-module/system/framework/")
-        }
-    }
-
-    dependsOn transformClassesWithDex, buildNative
-}
-
-task makeMagiskModule(type: Zip) {
-    from "$buildDir/intermediate/magisk-module/"
-    destinationDir file("$buildDir/outputs")
-    archiveName "magisk-module.zip"
-
-    dependsOn prepareMagiskModule
-}
-
-task signMagiskModule(type: Exec) {
-    executable localProperties.get("android.sdk") + "/build-tools/" + localProperties.get("android.buildtools") + "/apksigner"
-    args += ["sign" ,"--min-sdk-version" ,"24" ,"--max-sdk-version" ,"28"]
-
-    setStandardOutput  System.out
-    setErrorOutput     System.err
-
-    onlyIf {
-        def keystorePath     = localProperties.get("sign.keystore")
-        def keystorePassword = localProperties.get("sign.keystore.password")
-        def alias            = localProperties.get("sign.alias")
-        def aliasPassword    = localProperties.get("sign.alias.password")
-
-        if ( keystorePath == null || keystorePassword == null || alias == null || aliasPassword == null )
-            return false
-
-        args += ["--ks" ,keystorePath ,"--ks-pass" ,"pass:" + keystorePassword ,"--ks-key-alias" ,alias ,"--key-pass" ,"pass:" + aliasPassword]
-        args += ["$buildDir/outputs/magisk-module.zip"]
-
-        return true
-    }
-
-    dependsOn makeMagiskModule
-}
-
-idea {
-    module {
-        inheritOutputDirs = false
-        outputDir = compileJava.destinationDir
-        testOutputDir = compileTestJava.destinationDir
-    }
-}
-
-assemble.dependsOn(transformClassesWithDex)
-build.dependsOn(signMagiskModule)
+assemble.dependsOn.clear()
+build.dependsOn.clear()
+assemble.dependsOn(cmakeBuild ,transformDex ,buildMagiskModule)
+build.dependsOn(assemble)
+clean.dependsOn(cleanAll)
