@@ -1,51 +1,92 @@
-#include "riru_utils.h"
-
+#include <stdio.h>
 #include <jni.h>
+#include <dlfcn.h>
 #include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
 #include <android/log.h>
 
-#define TAG "RiruTemplate"
+#include "hook.h"
+#include "log.h"
 
-__attribute__((visibility("default")))
-void onModuleLoaded() {
-    riru_utils_init_module("Riru Template");
+//#define DEX_PATH               "/data/local/tmp/injector.jar"
+#define DEX_PATH               "/system/framework/boot-ibr.jar"
+
+#define CONFIG_PATH_FORMAT "/data/misc/riru/modules/ibr/config.%s.json"
+
+const char *parse_package_name(JNIEnv *env, jstring appDataDir) {
+    if (!appDataDir)
+        return 0;
+
+    const char *app_data_dir = (*env)->GetStringUTFChars(env ,appDataDir, NULL);
+
+    int user = 0;
+    static char package_name[256];
+    if (sscanf(app_data_dir, "/data/%*[^/]/%d/%s", &user, package_name) != 2) {
+        if (sscanf(app_data_dir, "/data/%*[^/]/%s", package_name) != 1) {
+            package_name[0] = '\0';
+            LOGW("can't parse %s", app_data_dir);
+            return NULL;
+        }
+    }
+
+    (*env)->ReleaseStringUTFChars(env ,appDataDir, app_data_dir);
+
+    return package_name;
 }
 
-void nativeForkAndSpecializePre(JNIEnv *env, jclass clazz, jint uid, jint gid, jintArray gids,
-								jint runtime_flags, jobjectArray rlimits, jint mount_external,
-								jstring se_info, jstring se_name, jintArray fdsToClose,
-								jintArray fdsToIgnore,
-								jboolean is_child_zygote, jstring instructionSet,
-								jstring appDataDir) {
-	__android_log_print(ANDROID_LOG_INFO ,TAG ,"nativeForkAndSpecializePre");
+__attribute__((visibility("default"))) void nativeForkAndSpecializePre(JNIEnv *env, jclass clazz,
+                                                                       jint _uid, jint gid,
+                                                                       jintArray gids,
+                                                                       jint runtime_flags,
+                                                                       jobjectArray rlimits,
+                                                                       jint _mount_external,
+                                                                       jstring se_info,
+                                                                       jstring se_name,
+                                                                       jintArray fdsToClose,
+                                                                       jintArray fdsToIgnore,
+                                                                       jboolean is_child_zygote,
+                                                                       jstring instructionSet,
+                                                                       jstring appDataDir) {
+    const char *package_name = parse_package_name(env ,appDataDir);
+    static char config_path_buffer[256];
+
+    if ( package_name ) {
+        sprintf(config_path_buffer ,CONFIG_PATH_FORMAT ,package_name);
+        if ( !access(config_path_buffer ,F_OK) ) {
+            config_path = config_path_buffer;
+            return;
+        }
+    }
+
+    LOGI("Skip %s" ,package_name);
+
+    config_path = NULL;
 }
 
 __attribute__((visibility("default")))
 int nativeForkAndSpecializePost(JNIEnv *env, jclass clazz, jint res) {
-	if (res ==  0) {
-		__android_log_print(ANDROID_LOG_INFO ,TAG ,"nativeForkAndSpecializePost");
-	} else {
-		// in zygote process, res is child pid
-		// don't print log here, see https://github.com/RikkaApps/Riru/blob/77adfd6a4a6a81bfd20569c910bc4854f2f84f5e/riru-core/jni/main/jni_native_method.cpp#L55-L66
-	}
-	return 0;
+    if (res != 0)
+        config_path = NULL;
+
+    return 0;
 }
 
 __attribute__((visibility("default")))
-void nativeForkSystemServerPre(JNIEnv *env, jclass clazz, uid_t uid, gid_t gid, jintArray gids,
-						 jint debug_flags, jobjectArray rlimits, jlong permittedCapabilities,
-						 jlong effectiveCapabilities) {
-	__android_log_print(ANDROID_LOG_INFO ,TAG ,"nativeForkSystemServerPre");
+void onModuleLoaded() {
+    char buffer[4096];
+    char *p = NULL;
+
+    strcpy(buffer,(p = getenv("CLASSPATH")) ? p : "");
+    strcat(buffer,":" DEX_PATH);
+    setenv("CLASSPATH",buffer,1);
+
+    hook_install();
 }
 
-__attribute__((visibility("default")))
-int nativeForkSystemServerPost(JNIEnv *env, jclass clazz, jint res) {
-	if (res ==  0) {
-		__android_log_print(ANDROID_LOG_INFO ,TAG ,"nativeForkSystemServerPost");
-		// in system server process
-	} else {
-		// in zygote process, res is child pid
-		// don't print log here, see https://github.com/RikkaApps/Riru/blob/77adfd6a4a6a81bfd20569c910bc4854f2f84f5e/riru-core/jni/main/jni_native_method.cpp#L55-L66
-	}
-	return 0;
+__attribute__((constructor))
+void onLibraryLoaded() {
+
 }
+
+

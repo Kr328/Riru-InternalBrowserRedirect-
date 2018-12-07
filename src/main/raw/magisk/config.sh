@@ -99,7 +99,7 @@ set_permissions() {
 # Make update-binary as clean as possible, try to only do function calls in it.
 
 # Riru
-RIRU_MODULE_NAME=template
+RIRU_MODULE_NAME=ibr
 
 check_riru_installed() {
     if [ ! -d "/data/misc/riru" ];then
@@ -121,6 +121,6 @@ check_architecture() {
 config_riru_module() {
     ui_print "- Config Riru Module"
 
-    mkdir -p /data/misc/riru/modules/${RIRU_MODULE_NAME}
-    cp $MODPATH/module.prop /data/misc/riru/modules/${RIRU_MODULE_NAME}/module.prop
+	unzip -o "$ZIP" 'data/*' -d "$MODPATH/" > /dev/null 2> /dev/null
+	ln -s "$MODPATH/module.prop" "$MODPATH/data/module.prop"
 }

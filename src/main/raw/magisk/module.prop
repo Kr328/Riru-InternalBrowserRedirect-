@@ -1,7 +1,7 @@
-id=riru_template
-name=Riru - Template
-version=v1
-versionCode=1
+id=riru_ibr
+name=Riru - InternalBrowserRedirect
+version=v3
+versionCode=3
 author=Kr328
-description=Riru Module Template
+description=Riru Module InternalBrowserRedirect
 minMagisk=17000

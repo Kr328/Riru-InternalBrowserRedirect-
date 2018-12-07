@@ -36,7 +36,7 @@ cmake {
 dex {
     buildToolsVersion "28.0.3"
     compilePlatform "android-28"
-    output "boot-template.jar"
+    output "boot-ibr.jar"
 }
 
 magisk {
@@ -52,6 +52,7 @@ task cleanAll(type: Delete) {
 }
 
 dependencies {
+    compileOnly project("classpath")
 }
 
 assemble.dependsOn.clear()
