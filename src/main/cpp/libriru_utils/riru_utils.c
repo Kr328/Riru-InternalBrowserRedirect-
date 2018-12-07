@@ -11,43 +11,6 @@
 #include <string.h>
 #include <malloc.h>
 
-//Private Internal
-static int replace_classes_count;
-static riru_utils_jni_replace_class_t *replace_classes;
-
-static jint (*original_jni_register)(JNIEnv *env, const char *class_name, const JNINativeMethod *methods, jint length);
-static jint replaced_jni_register(JNIEnv *env, const char *class_name, const JNINativeMethod *methods, jint length) {
-    for ( int i = 0 ; i < replace_classes_count ; i++ ) {
-        riru_utils_jni_replace_class_t *current = replace_classes + i;
-
-        if ( !strcmp(class_name ,current->class_name) ) {
-            static JNINativeMethod *new_methods;
-            new_methods = realloc(new_methods ,sizeof(JNINativeMethod) * length);
-            memcpy(new_methods ,methods , sizeof(JNINativeMethod) * length);
-
-            for ( int c = 0 ; c < length ; c++ ) {
-                JNINativeMethod *current_method = new_methods + c;
-                for ( int d = 0 ; d < current->method_count ; d++ ) {
-                    if ( !strcmp(current_method->name ,current->methods[d].method_name) && !strcmp(current_method->signature ,current->methods[d].signature) ) {
-                        void *original = riru_get_native_method_func(class_name ,current_method->name ,current_method->signature);
-                        if ( !original || original == current->methods[d].replace_function )
-                            original = current_method->fnPtr;
-
-                        riru_set_native_method_func(class_name ,current_method->name ,current_method->signature ,current_method->fnPtr);
-
-                        *current->methods[d].original_function = original;
-                        current_method->fnPtr = current->methods[d].replace_function;
-                    }
-                }
-            }
-
-            return original_jni_register(env ,class_name ,new_methods ,length);
-        }
-    }
-
-    return original_jni_register(env ,class_name ,methods ,length);
-}
-
 //Public Export
 int riru_utils_replace_native_functions(riru_utils_native_replace_t *functions, int length) {
     for ( int i = 0 ; i < length ; i++ ) {
@@ -73,9 +36,18 @@ int riru_utils_replace_native_functions(riru_utils_native_replace_t *functions, 
     return 0;
 }
 
-int riru_utils_set_replace_jni_methods(riru_utils_jni_replace_class_t *classes ,int length) {
+//Public Export
+int riru_utils_replace_jni_methods(riru_utils_jni_replace_method_t *classes ,int length ,JNIEnv *env) {
     for ( int i = 0 ; i < length ; i++ ) {
-        for
+        riru_utils_jni_replace_method_t *current = classes + i;
+
+        void *original_function = riru_get_native_method_func(current->class_name ,current->method_name ,current->signature);
+        *current->original_function = original_function;
+        riru_set_native_method_func(current->class_name ,current->method_name ,current->signature ,current->replace_function);
+
+        JNINativeMethod method = {current->method_name ,current->signature ,current->replace_function};
+
+        (*env)->RegisterNatives(env ,(*env)->FindClass(env ,current->class_name) ,&method ,1);
     }
 
     return 0;

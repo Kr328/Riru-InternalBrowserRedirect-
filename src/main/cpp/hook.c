@@ -19,18 +19,12 @@ static riru_utils_native_replace_t native_replace_list[] = {
 };
 
 static riru_utils_jni_replace_method_t jni_replace_method_list[] = {
-	{"getContextObject" ,"()Landroid/os/IBinder;" ,(void*)&get_context_object_replaced ,(void**)&get_context_object_original}
-};
-
-static riru_utils_jni_replace_class_t jni_replace_class_list[] = {
-	{"com/android/internal/os/BinderInternal" ,jni_replace_method_list ,ELMLEN(jni_replace_method_list)}
+	{"com/android/internal/os/BinderInternal" ,"getContextObject" ,"()Landroid/os/IBinder;" ,(void*)&get_context_object_replaced ,(void**)&get_context_object_original}
 };
 
 int hook_install() {
     riru_utils_init_module("ibr");
-
 	riru_utils_replace_native_functions(native_replace_list ,ELMLEN(native_replace_list));
-	riru_utils_set_replace_jni_methods(jni_replace_class_list ,ELMLEN(jni_replace_class_list));
 
 	return 0;
 }
@@ -62,6 +56,8 @@ static int android_runtime_start_reg_replaced(JNIEnv *env) {
 	int result = android_runtime_start_reg_original(env);
 
 	if ( !class_loaded ) {
+	    riru_utils_replace_jni_methods(jni_replace_method_list ,ELMLEN(jni_replace_method_list) ,env);
+
 		if ((java_inject_class = (*env)->FindClass(env,"com/github/kr328/ibr/Injector")) != NULL ) {
 		    java_get_context_object_method = (*env)->GetStaticMethodID(env ,java_inject_class ,"getContextObjectReplaced" ,"()Landroid/os/IBinder;");
 		    (*env)->RegisterNatives(env ,java_inject_class ,java_inject_methods ,ELMLEN(java_inject_methods));
@@ -71,7 +67,6 @@ static int android_runtime_start_reg_replaced(JNIEnv *env) {
 
 		class_loaded = 1;
 	}
-
 
 	return result;
 }
