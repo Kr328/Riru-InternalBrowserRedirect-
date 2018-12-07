@@ -31,16 +31,16 @@ public class CMakeConfigTask extends DefaultTask {
         ProcessBuilder builder = new ProcessBuilder();
         StringBuilder  outputs = new StringBuilder();
 
-        builder.command(PathUtils.toLocalSeparator(config.cmakeDirectory + "/bin/cmake" + PathUtils.executableSuffix()) ,
+        builder.command(PathUtils.toLocalSeparator(config.cmakeDirectory + "/bin/cmake" + PathUtils.executableSuffix(".exe")) ,
                 "-G" ,"Ninja" ,
-                "-DCMAKE_MAKE_PROGRAM=" + PathUtils.toLocalSeparator(config.cmakeDirectory + "/bin/ninja" + PathUtils.executableSuffix()),
+                "-DCMAKE_MAKE_PROGRAM=" + PathUtils.toLocalSeparator(config.cmakeDirectory + "/bin/ninja" + PathUtils.executableSuffix(".exe")),
                 "-DCMAKE_TOOLCHAIN_FILE=" + PathUtils.toLocalSeparator(config.androidNdkPath + "/build/cmake/android.toolchain.cmake") ,
                 "-DANDROID_PLATFORM=" + extension.getPlatform(),
                 "-DANDROID_STL=" + extension.getStl(),
                 "-DANDROID_ABI=" + abi ,
-                "-DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=" + PathUtils.toLocalSeparator(getProject().getBuildDir().getAbsolutePath() + "/output/cmake/" + abi + "/static") ,
-                "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=" + PathUtils.toLocalSeparator(getProject().getBuildDir().getAbsolutePath() + "/output/cmake/" + abi + "/shared") ,
-                "-DCMAKE_RUNTIME_OUTPUT_DIRECTORY=" + PathUtils.toLocalSeparator(getProject().getBuildDir().getAbsolutePath() + "/output/cmake/" + abi + "/executable") ,
+                "-DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=" + PathUtils.toLocalSeparator(getProject().getBuildDir().getAbsolutePath() + "/outputs/cmake/" + abi + "/static") ,
+                "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=" + PathUtils.toLocalSeparator(getProject().getBuildDir().getAbsolutePath() + "/outputs/cmake/" + abi + "/shared") ,
+                "-DCMAKE_RUNTIME_OUTPUT_DIRECTORY=" + PathUtils.toLocalSeparator(getProject().getBuildDir().getAbsolutePath() + "/outputs/cmake/" + abi + "/executable") ,
                 getProject().file(PathUtils.toLocalSeparator(extension.getSource())).getAbsolutePath());
 
         File cmakeConfigDirectory = getProject().file(PathUtils.toLocalSeparator(getProject().getBuildDir().getAbsolutePath() + "/intermediate/cmake/" + abi)).getAbsoluteFile();

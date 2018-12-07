@@ -1,5 +1,6 @@
 import com.github.kr328.plugin.riru.CMakePlugin
 import com.github.kr328.plugin.riru.MagiskPlugin
+import com.github.kr328.plugin.riru.SignaturePlugin
 import com.github.kr328.plugin.riru.TransformDexPlugin
 import com.github.kr328.plugin.riru.utils.AndroidUtils
 import com.github.kr328.plugin.riru.utils.PathUtils
@@ -9,6 +10,7 @@ apply plugin: 'idea'
 apply plugin: CMakePlugin
 apply plugin: TransformDexPlugin
 apply plugin: MagiskPlugin
+apply plugin: SignaturePlugin;
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -40,10 +42,22 @@ dex {
 }
 
 magisk {
-    map file("$buildDir/output/dex/") ,"system/framework/"
-    map file("$buildDir/output/cmake/armeabi-v7a/shared") ,"system/lib"
-    map file("$buildDir/output/cmake/arm64-v8a/shared")   ,"system/lib64"
+    output file("$buildDir/outputs/magisk-module.zip")
+    
+    map file("$buildDir/outputs/dex/") ,"system/framework/"
+    map file("$buildDir/outputs/cmake/armeabi-v7a/shared") ,"system/lib"
+    map file("$buildDir/outputs/cmake/arm64-v8a/shared")   ,"system/lib64"
     map file("src/main/raw/magisk") ,""
+}
+
+signature {
+    targetFile file("$buildDir/outputs/magisk-module.zip")
+    buildToolsVersion "28.0.3"
+    
+    keyStore file("release.keystore")
+    keyStorePassword "android"
+    alias "androiddebugkey"
+    aliasPassword "android"
 }
 
 task cleanAll(type: Delete) {
@@ -55,8 +69,9 @@ dependencies {
     compileOnly project("classpath")
 }
 
+signatureOutput.dependsOn(buildMagiskModule)
 assemble.dependsOn.clear()
 build.dependsOn.clear()
-assemble.dependsOn(cmakeBuild ,transformDex ,buildMagiskModule)
+assemble.dependsOn(cmakeBuild ,transformDex ,buildMagiskModule ,signatureOutput)
 build.dependsOn(assemble)
 clean.dependsOn(cleanAll)

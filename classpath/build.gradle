@@ -13,5 +13,5 @@ sourceSets {
 }
 
 compileJava {
-    //destinationDir file(PathUtils.toLocalSeparator("$buildDir/intermediate/classes"))
+    //destinationDir targetFile(PathUtils.toLocalSeparator("$buildDir/intermediate/classes"))
 }

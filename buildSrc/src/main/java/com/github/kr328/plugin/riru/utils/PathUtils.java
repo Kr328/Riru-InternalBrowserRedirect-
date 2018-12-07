@@ -14,15 +14,10 @@ public class PathUtils {
         return result;
     }
 
-    public static synchronized String executableSuffix() {
-        if ( exe == null ) {
-            if ( System.getProperty("os.name").toLowerCase().contains("win") )
-                exe = ".exe";
-            else
-                exe = "";
-        }
-
-        return exe;
+    public static String executableSuffix(String suffix) {
+        if ( System.getProperty("os.name").toLowerCase().contains("win") )
+            return suffix;
+        return "";
     }
 
     private static String exe;

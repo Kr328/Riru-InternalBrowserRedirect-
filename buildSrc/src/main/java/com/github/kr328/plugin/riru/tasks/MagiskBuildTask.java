@@ -18,7 +18,7 @@ public class MagiskBuildTask extends DefaultTask {
     @TaskAction
     @SuppressWarnings({"unused", "ResultOfMethodCallIgnored"})
     public void run() throws IOException {
-        File outputFile = new File(PathUtils.toLocalSeparator(getProject().getBuildDir().getAbsolutePath() + "/output/magisk-module.zip"));
+        File outputFile = new File(extension.getOutput().getAbsolutePath());
         outputFile.getParentFile().mkdirs();
 
         ZipOutputStream outputStream = new ZipOutputStream(new FileOutputStream(outputFile));

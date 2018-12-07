@@ -40,7 +40,7 @@ public class TransformDexTask extends DefaultTask {
             String executable = PathUtils.toLocalSeparator(config.androidSdkPath +
                             "/build-tools/" + extension.getBuildToolsVersion() +
                             "/d8" + (System.getProperty("os.name").toLowerCase().contains("win") ? ".bat" : ""));
-            String outputPath = PathUtils.toLocalSeparator(getProject().getBuildDir().getAbsolutePath().concat("/output/dex/").concat(extension.getOutput()));
+            String outputPath = PathUtils.toLocalSeparator(getProject().getBuildDir().getAbsolutePath().concat("/outputs/dex/").concat(extension.getOutput()));
             String libraryPath = PathUtils.toLocalSeparator(config.androidSdkPath + "/platforms/" + extension.getCompilePlatform() + "/android.jar");
 
             //noinspection ResultOfMethodCallIgnored
