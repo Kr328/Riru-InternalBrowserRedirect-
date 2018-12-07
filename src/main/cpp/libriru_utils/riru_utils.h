@@ -24,7 +24,6 @@ typedef struct riru_utils_jni_replace_class_s {
 } riru_utils_jni_replace_class_t;
 
 
-
 int riru_utils_replace_native_functions(riru_utils_native_replace_t *functions, int length);
 int riru_utils_set_replace_jni_methods(riru_utils_jni_replace_class_t *classes ,int length);
 

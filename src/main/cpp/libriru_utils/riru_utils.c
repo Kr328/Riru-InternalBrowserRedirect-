@@ -74,22 +74,9 @@ int riru_utils_replace_native_functions(riru_utils_native_replace_t *functions, 
 }
 
 int riru_utils_set_replace_jni_methods(riru_utils_jni_replace_class_t *classes ,int length) {
-    static int installed = 0;
-
-    replace_classes       = classes;
-    replace_classes_count = length;
-
-    if ( !installed )
-        return 0;
-
-    static riru_utils_native_replace_t register_jni_function = {
-            ".*android_runtime.*" ,
-            "jniRegisterNativeMethods" ,
-            (void *)  &replaced_jni_register ,
-            (void **) &original_jni_register
-    };
-
-    riru_utils_replace_native_functions(&register_jni_function ,1);
+    for ( int i = 0 ; i < length ; i++ ) {
+        for
+    }
 
     return 0;
 }
