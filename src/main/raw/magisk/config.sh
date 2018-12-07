@@ -42,7 +42,7 @@ LATESTARTSERVICE=false
 
 print_modname() {
   ui_print "******************************"
-  ui_print "       Riru - Template        "
+  ui_print "Riru - InternalBrowserRedirect"
   ui_print "******************************"
 }
 
