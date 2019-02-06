@@ -42,7 +42,7 @@ dex {
 }
 
 magisk {
-    output file("$buildDir/outputs/magisk-module.zip")
+    output file("$buildDir/outputs/riru-internal-browser-redirect.zip")
     
     map file("$buildDir/outputs/dex/") ,"system/framework/"
     map file("$buildDir/outputs/cmake/armeabi-v7a/shared") ,"system/lib"
