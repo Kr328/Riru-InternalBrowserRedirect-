@@ -4,6 +4,7 @@ import android.app.IActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.net.*;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.os.IServiceManager;
 import android.os.ServiceManagerNative;
@@ -43,7 +44,11 @@ public class Injector {
     }
 
     private static Intent onStartActivity(Intent intent) {
-        Object object = intent.getExtras().get(GlobalConfig.get().getUrlKey());
+        Bundle extras = intent.getExtras();
+        if ( extras == null )
+            return intent;
+
+        Object object = extras.get(GlobalConfig.get().getUrlKey());
         Uri uri;
 
         if ( object == null )
