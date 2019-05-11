@@ -16,7 +16,7 @@ import java.lang.reflect.Method;
 @SuppressWarnings("unused")
 public class Injector {
     public static IBinder getContextObjectReplaced() {
-        Log.i(Global.TAG ,"Java getContextObject called");
+        Log.i(Constants.TAG ,"Java getContextObject called");
 
         GlobalConfig.load(getCurrentConfigPath());
 
@@ -35,7 +35,7 @@ public class Injector {
         switch ( method.getName() ) {
             case "startActivity" :
                 Intent intent = (Intent) args[2];
-                Log.i(Global.TAG ,"TIM starting " + intent + " extra " + intent.getExtras());
+                Log.i(Constants.TAG ,"TIM starting " + intent + " extra " + intent.getExtras());
                 args[2] = onStartActivity(intent);
                 break;
         }

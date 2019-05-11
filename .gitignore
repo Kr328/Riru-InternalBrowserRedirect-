@@ -20,3 +20,6 @@ gradle-app.setting
 # KeyStore
 *.keystore
 *.jks
+
+# gradle
+/.gradle

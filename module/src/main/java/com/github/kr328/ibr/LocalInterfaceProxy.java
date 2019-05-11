@@ -18,13 +18,13 @@ public class LocalInterfaceProxy {
         InvocationHandler binderInvocationHandler = (Object thiz, Method method, Object[] args) -> {
             try {
                 if ( method.getName().equals("queryLocalInterface") ) {
-                    //Log.i(Global.TAG ,"queryLocalInterface " + args[0] + " == " + interfaceName);
+                    //Log.i(Constants.TAG ,"queryLocalInterface " + args[0] + " == " + interfaceName);
                     if ( interfaceName.equals(args[0]) )
                         return Proxy.newProxyInstance(LocalInterfaceProxy.class.getClassLoader() ,new Class[]{Class.forName(interfaceName)} ,interfaceInvocationHandler);
                 }
             }
             catch (Exception ignored) {
-                Log.w(Global.TAG ,"Proxy " + original.getClass().getName() + " failure.");
+                Log.w(Constants.TAG ,"Proxy " + original.getClass().getName() + " failure.");
             }
 
             return method.invoke(originalBinder ,args);

@@ -1,0 +1,26 @@
+apply plugin: 'java'
+apply plugin: 'rirutools.ndk'
+apply plugin: 'rirutools.dex'
+
+group 'com.github.kr328'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+ndk {
+    sourceDir = "src/main/cpp"
+}
+
+dex {
+    platform = "android-28"
+    buildTools = "28.0.3"
+    
+    exclude "android"
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+}

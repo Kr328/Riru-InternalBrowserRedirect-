@@ -1,5 +1,5 @@
 package com.github.kr328.ibr;
 
-public class Global {
+public class Constants {
     public static final String TAG = "InternalBrowserRedirect";
 }

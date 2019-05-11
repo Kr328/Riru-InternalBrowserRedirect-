@@ -27,11 +27,11 @@ public class GlobalConfig {
             urlKey           = jsonObject.getString("urlKey");
             hostWhitePattern = Pattern.compile(jsonObject.getString("hostWhitePattern"));
         } catch (IOException e) {
-            Log.i(Global.TAG ,"failure to load config " + path ,e);
+            Log.i(Constants.TAG ,"failure to load config " + path ,e);
         } catch (JSONException e) {
-            Log.i(Global.TAG ,"failure to parse config " + path ,e);
+            Log.i(Constants.TAG ,"failure to parse config " + path ,e);
         } catch (PatternSyntaxException e) {
-            Log.i(Global.TAG ,"failure to compile pattern " + path ,e);
+            Log.i(Constants.TAG ,"failure to compile pattern " + path ,e);
         }
     }
 

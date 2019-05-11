@@ -1,77 +1,22 @@
-import com.github.kr328.plugin.riru.CMakePlugin
-import com.github.kr328.plugin.riru.MagiskPlugin
-import com.github.kr328.plugin.riru.SignaturePlugin
-import com.github.kr328.plugin.riru.TransformDexPlugin
-import com.github.kr328.plugin.riru.utils.AndroidUtils
-import com.github.kr328.plugin.riru.utils.PathUtils
-
-apply plugin: 'java'
-apply plugin: 'idea'
-apply plugin: CMakePlugin
-apply plugin: TransformDexPlugin
-apply plugin: MagiskPlugin
-apply plugin: SignaturePlugin;
-
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
-
-repositories {
-    mavenCentral()
-    jcenter()
+buildscript {
+    repositories {
+        google()
+        jcenter()
+        maven { url "https://dl.bintray.com/kr328/riru-gradle-tools/" }
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:3.3.2'
+        classpath 'com.github.kr328:riru-gradle-tools:1.0-alpha01'
+    }
 }
 
-sourceSets {
-    main.compileClasspath += project(":classpath").files("src/main/java") // for hidden api
-    main.compileClasspath += files(AndroidUtils.androidJarPath("android-28")) //android.jar
+allprojects {
+    repositories {
+        google()
+        jcenter()
+    }
 }
 
-compileJava {
-    destinationDir file(PathUtils.toLocalSeparator("$buildDir/intermediate/classes"))
+task clean(type: Delete) {
+    delete rootProject.buildDir
 }
-
-cmake {
-    source 'src/main/cpp'
-    abiFilter "armeabi-v7a" ,"arm64-v8a"
-    platform "android-21"
-}
-
-dex {
-    buildToolsVersion "28.0.3"
-    compilePlatform "android-28"
-    output "boot-ibr.jar"
-}
-
-magisk {
-    output file("$buildDir/outputs/riru-internal-browser-redirect.zip")
-    
-    map file("$buildDir/outputs/dex/") ,"system/framework/"
-    map file("$buildDir/outputs/cmake/armeabi-v7a/shared") ,"system/lib"
-    map file("$buildDir/outputs/cmake/arm64-v8a/shared")   ,"system/lib64"
-    map file("src/main/raw/magisk") ,""
-}
-
-signature {
-    targetFile file("$buildDir/outputs/magisk-module.zip")
-    buildToolsVersion "28.0.3"
-    
-    keyStore file("release.keystore")
-    keyStorePassword "android"
-    alias "androiddebugkey"
-    aliasPassword "android"
-}
-
-task cleanAll(type: Delete) {
-    delete "build" ,"out"
-    delete PathUtils.toLocalSeparator("buildSrc/build") ,PathUtils.toLocalSeparator("buildSrc/out")
-}
-
-dependencies {
-    compileOnly project("classpath")
-}
-
-signatureOutput.dependsOn(buildMagiskModule)
-assemble.dependsOn.clear()
-build.dependsOn.clear()
-assemble.dependsOn(cmakeBuild ,transformDex ,buildMagiskModule ,signatureOutput)
-build.dependsOn(assemble)
-clean.dependsOn(cleanAll)
