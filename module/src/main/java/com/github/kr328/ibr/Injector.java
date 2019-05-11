@@ -15,21 +15,8 @@ import java.lang.reflect.Method;
 
 @SuppressWarnings("unused")
 public class Injector {
-    public static IBinder getContextObjectReplaced() {
-        Log.i(Constants.TAG ,"Java getContextObject called");
-
-        GlobalConfig.load(getCurrentConfigPath());
-
-        return LocalInterfaceProxy.createInterfaceProxyBinder(ServiceManagerNative.asInterface(getContextObjectOriginal()) ,IServiceManager.class.getName() ,(original , replaced , method , args) -> {
-            if ( "getService".equals(method.getName()) ) {
-                switch ( args[0].toString() ) {
-                    case Context.ACTIVITY_SERVICE :
-                        return LocalInterfaceProxy.createInterfaceProxyBinder(IActivityManager.Stub.asInterface(original.getService(Context.ACTIVITY_SERVICE)) ,IActivityManager.class.getName() ,Injector::onActivityServiceCalled);
-                }
-            }
-
-            return method.invoke(original ,args);
-        });
+    public static void inject(String configData) {
+        Log.i(Constants.TAG, "Injected " + configData);
     }
 
     private static Object onActivityServiceCalled(IActivityManager original ,IActivityManager replaced ,Method method ,Object[] args) throws Throwable {

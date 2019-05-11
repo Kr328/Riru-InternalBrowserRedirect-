@@ -1,4 +1,3 @@
-#@IgnoreInspection BashAddShebang
 ##########################################################################################
 #
 # Magisk Module Installer Script
@@ -156,13 +155,13 @@ on_install() {
 	rm -rf "$MODPATH/system/lib64"
   fi
 
-  TARGET="$RIRU_PATH/modules"
+  TARGET="$RIRU_PATH/modules/ibr"
 
   ui_print "- Extracting extra files"
   unzip -o "$ZIPFILE" 'data/*' -d "$TMPDIR" >&2
 
  [[ -d "$TARGET" ]] || mkdir -p "$TARGET" || abort "! Can't mkdir -p $TARGET"
-  cp -af "$TMPDIR$TARGET/." "$TARGET" || abort "! Can't cp -af $TMPDIR$TARGET/. $TARGET"
+  cp -af "$TMPDIR/data/." "$TARGET" || abort "! Can't cp -af $TMPDIR$TARGET/. $TARGET"
 
   ui_print "- Files copied"
 }

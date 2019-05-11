@@ -1,10 +1,6 @@
-# magisk
 id=riru_ibr
 name=Riru - InternalBrowserRedirect
 version=v6
 versionCode=6
 author=Kr328
 description=Internal Browser Redirect [( Riru - Core > 7 && API 26/27/28 ) Required]
-
-#riru
-api=4

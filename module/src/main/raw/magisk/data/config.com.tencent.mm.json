@@ -1,4 +1,4 @@
 {
-	"urlKey" : "urlRaw" ,
+	"urlKey" : "rawUrl" ,
 	"hostWhitePattern" : ".*qq\\.com"
 } 

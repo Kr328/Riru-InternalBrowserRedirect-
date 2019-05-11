@@ -28,9 +28,12 @@ static void on_fork(JNIEnv *env, jstring *packageName) {
         config_data = malloc_and_load_file(config_path_buffer);
     }
 
-    (*env)->ReleaseStringChars(env, packageName, (const jchar *) package_name_str);
+    if ( config_data == NULL )
+        LOGI("Skip %s" ,package_name_str);
+    else
+        LOGI("Inject %s" ,package_name_str);
 
-    LOGI("Skip %s" ,package_name_str);
+    (*env)->ReleaseStringChars(env, packageName, (const jchar *) package_name_str);
 }
 
 EXPORT

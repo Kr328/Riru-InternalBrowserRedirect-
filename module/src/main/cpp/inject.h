@@ -2,7 +2,7 @@
 
 #include <jni.h>
 
-#define INJECT_CLASS_PATH "com/github/kr328/ibr/Inject"
+#define INJECT_CLASS_PATH "com/github/kr328/ibr/Injector"
 #define INJECT_METHOD_NAME "inject"
 
 void find_inject_class_method(JNIEnv *env);

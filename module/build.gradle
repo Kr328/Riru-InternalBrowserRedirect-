@@ -18,7 +18,12 @@ dex {
 }
 
 magisk {
+    output "$buildDir/outputs/riru-internal-browser-redirect.zip"
+    
     zip.map(file("src/main/raw/magisk"), "/")
+    zip.map(file("$buildDir/outputs/dex/classes.jar"), "/system/framework/boot-ibr.jar")
+    zip.map(file("$buildDir/outputs/ndk/arm64-v8a/shared") ,"/system/lib64")
+    zip.map(file("$buildDir/outputs/ndk/armeabi-v7a/shared") ,"/system/lib")
 }
 
 repositories {
