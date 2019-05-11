@@ -8,71 +8,79 @@
 
 #include "hook.h"
 #include "log.h"
+#include "utils.h"
+#include "inject.h"
 
-//#define DEX_PATH               "/data/local/tmp/injector.jar"
-#define DEX_PATH               "/system/framework/boot-ibr.jar"
+#define EXPORT __attribute__((visibility("default")))
 
+#define DEX_PATH           "/system/framework/boot-ibr.jar"
 #define CONFIG_PATH_FORMAT "/data/misc/riru/modules/ibr/config.%s.json"
 
-const char *parse_package_name(JNIEnv *env, jstring appDataDir) {
-    if (!appDataDir)
-        return 0;
+static char *config_data;
 
-    const char *app_data_dir = (*env)->GetStringUTFChars(env ,appDataDir, NULL);
-
-    int user = 0;
-    static char package_name[256];
-    if (sscanf(app_data_dir, "/data/%*[^/]/%d/%s", &user, package_name) != 2) {
-        if (sscanf(app_data_dir, "/data/%*[^/]/%s", package_name) != 1) {
-            package_name[0] = '\0';
-            LOGW("can't parse %s", app_data_dir);
-            return NULL;
-        }
-    }
-
-    (*env)->ReleaseStringUTFChars(env ,appDataDir, app_data_dir);
-
-    return package_name;
-}
-
-__attribute__((visibility("default"))) void nativeForkAndSpecializePre(JNIEnv *env, jclass clazz,
-                                                                       jint _uid, jint gid,
-                                                                       jintArray gids,
-                                                                       jint runtime_flags,
-                                                                       jobjectArray rlimits,
-                                                                       jint _mount_external,
-                                                                       jstring se_info,
-                                                                       jstring se_name,
-                                                                       jintArray fdsToClose,
-                                                                       jintArray fdsToIgnore,
-                                                                       jboolean is_child_zygote,
-                                                                       jstring instructionSet,
-                                                                       jstring appDataDir) {
-    const char *package_name = parse_package_name(env ,appDataDir);
+static void on_fork(JNIEnv *env, jstring *packageName) {
     static char config_path_buffer[256];
 
-    if ( package_name ) {
-        sprintf(config_path_buffer ,CONFIG_PATH_FORMAT ,package_name);
-        if ( !access(config_path_buffer ,F_OK) ) {
-            config_path = config_path_buffer;
-            return;
-        }
+    const char *package_name_str = (*env)->GetStringUTFChars(env, packageName, NULL);
+
+    if ( packageName ) {
+        sprintf(config_path_buffer ,CONFIG_PATH_FORMAT ,package_name_str);
+        config_data = malloc_and_load_file(config_path_buffer);
     }
 
-    LOGI("Skip %s" ,package_name);
+    (*env)->ReleaseStringChars(env, packageName, (const jchar *) package_name_str);
 
-    config_path = NULL;
+    LOGI("Skip %s" ,package_name_str);
 }
 
-__attribute__((visibility("default")))
+EXPORT
+void nativeForkAndSpecializePre(
+        JNIEnv *env, jclass clazz, jint *_uid, jint *gid, jintArray *gids, jint *runtime_flags,
+        jobjectArray *rlimits, jint *_mount_external, jstring *se_info, jstring *se_name,
+        jintArray *fdsToClose, jintArray *fdsToIgnore, jboolean *is_child_zygote,
+        jstring *instructionSet, jstring *appDataDir, jstring *packageName,
+        jobjectArray *packagesForUID, jstring *sandboxId) {
+
+    on_fork(env, packageName);
+}
+
+EXPORT
 int nativeForkAndSpecializePost(JNIEnv *env, jclass clazz, jint res) {
-    if (res != 0)
-        config_path = NULL;
+    if ( res == 0 && config_data != NULL )
+        invoke_inject_method(env, config_data);
+
+    if ( config_data != NULL )
+        free(config_data);
 
     return 0;
 }
 
-__attribute__((visibility("default")))
+EXPORT
+void specializeAppProcessPre(
+        JNIEnv *env, jclass clazz, jint *_uid, jint *gid, jintArray *gids, jint *runtimeFlags,
+        jobjectArray *rlimits, jint *mountExternal, jstring *seInfo, jstring *niceName,
+        jboolean *startChildZygote, jstring *instructionSet, jstring *appDataDir,
+        jstring *packageName, jobjectArray *packagesForUID, jstring *sandboxId) {
+    // from Android Q beta 3
+    // in zygote process
+    on_fork(env, packageName);
+}
+
+EXPORT
+int specializeAppProcessPost(
+        JNIEnv *env, jclass clazz) {
+    // from Android Q beta 3
+    // in app process
+
+    if ( config_data != NULL ) {
+        invoke_inject_method(env, config_data);
+        free(config_data);
+    }
+
+    return 0;
+}
+
+EXPORT
 void onModuleLoaded() {
     char buffer[4096];
     char *p = NULL;
@@ -81,12 +89,6 @@ void onModuleLoaded() {
     strcat(buffer,":" DEX_PATH);
     setenv("CLASSPATH",buffer,1);
 
-    hook_install();
+    hook_install(&find_inject_class_method);
 }
-
-__attribute__((constructor))
-void onLibraryLoaded() {
-
-}
-
 

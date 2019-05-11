@@ -9,9 +9,11 @@ MODDIR=${0%/*}
 RIRU_MODULES_DIR="/data/misc/riru/modules"
 DATA_DIRECTORY="$RIRU_MODULES_DIR/ibr"
 
-if [ ! -d "$RIRU_MODULES_DIR" ];then
+if [[ ! -d "$RIRU_MODULES_DIR" ]];then
     exit 1
 fi
 
 mkdir -p "$DATA_DIRECTORY"
+touch "$DATA_DIRECTORY/module.prop"
 mount -o bind "$MODDIR/data" "$DATA_DIRECTORY"
+mount -o bind "$MODDIR/module.prop" "$DATA_DIRECTORY/module.prop"

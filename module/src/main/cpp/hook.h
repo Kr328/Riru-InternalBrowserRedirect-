@@ -11,6 +11,4 @@
 
 #include "log.h"
 
-int hook_install();
-
-extern const char *config_path;
+int hook_install(void (*on_register_jni_callback)(JNIEnv *env));

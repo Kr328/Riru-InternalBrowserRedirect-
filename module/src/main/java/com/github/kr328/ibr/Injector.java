@@ -27,6 +27,7 @@ public class Injector {
                         return LocalInterfaceProxy.createInterfaceProxyBinder(IActivityManager.Stub.asInterface(original.getService(Context.ACTIVITY_SERVICE)) ,IActivityManager.class.getName() ,Injector::onActivityServiceCalled);
                 }
             }
+
             return method.invoke(original ,args);
         });
     }
@@ -35,7 +36,7 @@ public class Injector {
         switch ( method.getName() ) {
             case "startActivity" :
                 Intent intent = (Intent) args[2];
-                Log.i(Constants.TAG ,"TIM starting " + intent + " extra " + intent.getExtras());
+                Log.i(Constants.TAG ,"Starting " + intent + " extra " + intent.getExtras());
                 args[2] = onStartActivity(intent);
                 break;
         }

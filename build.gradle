@@ -2,11 +2,11 @@ buildscript {
     repositories {
         google()
         jcenter()
-        maven { url "https://dl.bintray.com/kr328/riru-gradle-tools/" }
+        maven { url "file:///home/null/Workspace/JavaProjects/rirutools/build/repo/" }
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:3.3.2'
-        classpath 'com.github.kr328:riru-gradle-tools:1.0-alpha01'
+        classpath 'com.github.kr328:riru-gradle-tools:1.0-alpha03'
     }
 }
 
