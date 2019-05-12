@@ -1,67 +1,80 @@
 package com.github.kr328.ibr;
 
+import android.app.ActivityManager;
 import android.app.IActivityManager;
-import android.content.Context;
 import android.content.Intent;
-import android.net.*;
-import android.os.Bundle;
-import android.os.IBinder;
-import android.os.IServiceManager;
-import android.os.ServiceManagerNative;
 import android.util.Log;
-import android.webkit.URLUtil;
+import android.util.Singleton;
+import org.json.JSONException;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.regex.PatternSyntaxException;
 
 @SuppressWarnings("unused")
 public class Injector {
     public static void inject(String configData) {
-        Log.i(Constants.TAG, "Injected " + configData);
-    }
-
-    private static Object onActivityServiceCalled(IActivityManager original ,IActivityManager replaced ,Method method ,Object[] args) throws Throwable {
-        switch ( method.getName() ) {
-            case "startActivity" :
-                Intent intent = (Intent) args[2];
-                Log.i(Constants.TAG ,"Starting " + intent + " extra " + intent.getExtras());
-                args[2] = onStartActivity(intent);
-                break;
+        if ( injected ) {
+            Log.i(Constants.TAG, "Ignore Injected");
+            return;
         }
 
-        return method.invoke(original ,args);
+        injected = true;
+
+        Log.i(Constants.TAG, "Injecting");
+
+        try {
+            rules = new Rules(configData);
+        } catch (JSONException|PatternSyntaxException e) {
+            Log.e(Constants.TAG, "Load config failure", e);
+            return;
+        }
+
+        try {
+            install();
+        } catch (Exception e) {
+            Log.e(Constants.TAG, "Create proxy Interface failure", e);
+        }
+
+        Log.i(Constants.TAG, "Inject " + rules.getName() + " Success");
     }
 
-    private static Intent onStartActivity(Intent intent) {
-        Bundle extras = intent.getExtras();
-        if ( extras == null )
-            return intent;
-
-        Object object = extras.get(GlobalConfig.get().getUrlKey());
-        Uri uri;
-
-        if ( object == null )
-            return intent;
-
-        String url = object.toString();
-
-        if (url.isEmpty())
-            return intent;
-        else if (!URLUtil.isValidUrl(url))
-            return intent;
-        else if (GlobalConfig.get().getHostWhitePattern().matcher((uri = Uri.parse(url)).getHost()).matches())
-            return intent;
-        else if ( lastStartUri.equals(uri) && System.currentTimeMillis() - lastStartTime < 10 * 1000 )
-            return intent;
-
-        lastStartUri  = uri;
-        lastStartTime = System.currentTimeMillis();
-
-        return new Intent(Intent.ACTION_VIEW).setData(uri);
+    @SuppressWarnings("JavaReflectionMemberAccess")
+    private static void install() throws Exception {
+        Field singletonField = ActivityManager.class.getDeclaredField("IActivityManagerSingleton");
+        singletonField.setAccessible(true);
+        Singleton singleton = (Singleton) singletonField.get(null);
+        IActivityManager original = (IActivityManager) singleton.get();
+        singletonField.set(null, new Singleton<IActivityManager>() {
+            @Override
+            protected IActivityManager create() {
+                return LocalInterfaceProxy.createInterfaceProxy(original, new Class[]{IActivityManager.class}, Injector::onActivityCalled);
+            }
+        });
     }
 
-    public static native IBinder getContextObjectOriginal();
-    public static native String  getCurrentConfigPath();
+    private static Object onActivityCalled(IActivityManager original, IActivityManager replaced, Method method, Object[] args) throws Exception {
+        if (!"startActivity".equals(method.getName()))
+            return method.invoke(original, args);
 
-    private static Uri  lastStartUri  = Uri.EMPTY;
-    private static long lastStartTime = 0;
+        if (!(args[2] instanceof Intent))
+            return method.invoke(original, args);
+
+        Intent intent = (Intent) args[2];
+
+        Rules.Rule.Matcher matcher = rules.matcher(intent);
+
+        if ( matcher.matches() ) {
+            intent.setAction(Intent.ACTION_VIEW).setData(matcher.getUri()).setComponent(null);
+            Log.i(Constants.TAG, rules.getName() + ": Modified intent " + intent + intent.getExtras());
+        }
+        else {
+            Log.i(Constants.TAG, rules.getName() + ": Ignore intent " + intent + intent.getExtras());
+        }
+
+        return method.invoke(original, args);
+    }
+
+    private static boolean injected = false;
+    private static Rules rules;
 }

@@ -33,6 +33,17 @@ public class LocalInterfaceProxy {
         return (IBinder) Proxy.newProxyInstance(LocalInterfaceProxy.class.getClassLoader() ,new Class[]{IBinder.class} ,binderInvocationHandler);
     }
 
+    public static <Interface extends IInterface> Interface createInterfaceProxy(Interface original, Class<?>[] proxy, InterfaceCallback<Interface> callback) {
+        return (Interface) Proxy.newProxyInstance(original.getClass().getClassLoader(), proxy, (replaced, method, args) -> {
+            try {
+                return callback.onCalled(original, (Interface) replaced, method, args);
+            } catch (Exception e) {
+                Log.e(Constants.TAG, "InterfaceProxy", e);
+            }
+            return method.invoke(original, args);
+        });
+    }
+
     public interface InterfaceCallback<Interface extends IInterface> {
         Object onCalled(Interface original ,Interface replaced ,Method method ,Object[] args) throws Throwable;
     }

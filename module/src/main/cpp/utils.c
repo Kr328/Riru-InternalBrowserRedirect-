@@ -1,6 +1,9 @@
 #include "utils.h"
 
 char *malloc_and_load_file(const char *path) {
+    if ( path == NULL )
+        return NULL;
+
     if ( access(path, R_OK) != 0 )
         return NULL;
 
@@ -17,6 +20,8 @@ char *malloc_and_load_file(const char *path) {
     char *result = (char*) malloc((size_t) file_stat.st_size);
 
     read(fd, result, (size_t) file_stat.st_size);
+
+    close(fd);
 
     return result;
 }

@@ -18,22 +18,35 @@
 
 static char *config_data;
 
-static void on_fork(JNIEnv *env, jstring *packageName) {
+static void on_fork(JNIEnv *env,jstring *appDataDir, jstring *packageName) {
     static char config_path_buffer[256];
+    char package_name[256];
 
-    const char *package_name_str = (*env)->GetStringUTFChars(env, packageName, NULL);
-
-    if ( packageName ) {
-        sprintf(config_path_buffer ,CONFIG_PATH_FORMAT ,package_name_str);
-        config_data = malloc_and_load_file(config_path_buffer);
+    if ( appDataDir ) {
+        const char *app_data_dir = (*env)->GetStringUTFChars(env, *appDataDir, NULL);
+        int user = 0;
+        if (sscanf(app_data_dir, "/data/%*[^/]/%d/%s", &user, package_name) != 2) {
+            if (sscanf(app_data_dir, "/data/%*[^/]/%s", package_name) != 1) {
+                package_name[0] = '\0';
+                LOGW("can't parse %s", app_data_dir);
+            }
+        }
+        (*env)->ReleaseStringChars(env, *appDataDir, (const jchar *) app_data_dir);
+    }
+    else if ( packageName ) {
+        const char *package_name_const_str = (*env)->GetStringUTFChars(env, *packageName, NULL);
+        if ( package_name_const_str )
+            strncpy(package_name, package_name_const_str, sizeof(package_name));
+        (*env)->ReleaseStringChars(env, &packageName, (const jchar *) package_name_const_str);
     }
 
-    if ( config_data == NULL )
-        LOGI("Skip %s" ,package_name_str);
-    else
-        LOGI("Inject %s" ,package_name_str);
+    sprintf(config_path_buffer ,CONFIG_PATH_FORMAT ,package_name);
+    config_data = malloc_and_load_file(config_path_buffer);
 
-    (*env)->ReleaseStringChars(env, packageName, (const jchar *) package_name_str);
+    if ( config_data == NULL )
+        LOGI("Skip %s" ,package_name);
+    else
+        LOGI("Inject %s" ,package_name);
 }
 
 EXPORT
@@ -44,7 +57,7 @@ void nativeForkAndSpecializePre(
         jstring *instructionSet, jstring *appDataDir, jstring *packageName,
         jobjectArray *packagesForUID, jstring *sandboxId) {
 
-    on_fork(env, packageName);
+    on_fork(env, appDataDir, NULL);
 }
 
 EXPORT
@@ -66,7 +79,7 @@ void specializeAppProcessPre(
         jstring *packageName, jobjectArray *packagesForUID, jstring *sandboxId) {
     // from Android Q beta 3
     // in zygote process
-    on_fork(env, packageName);
+    on_fork(env, NULL, packageName);
 }
 
 EXPORT

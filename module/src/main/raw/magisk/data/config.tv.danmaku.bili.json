@@ -3,7 +3,7 @@
 	"rules": [
 		{
 			"extra-key": "url",
-			"ignore-url": ".*qq\\.com.*",
+			"ignore-url": ".*bilibili\\.com.*",
 			"force-url": ""
 		}
 	]
